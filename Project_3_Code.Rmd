@@ -7,11 +7,10 @@ output: html_document
 
 ```{r}
 library(data.table)
-library(twitteR)
 library(dplyr)
 
 ########################### FOR SAMPLE DATABASE
-
+#library(twitteR)
 #consumer_key <- "DaAA9z8QvnxsdL0SpIr1oYwvP"
 #consumer_secret <- "bCfsuODQyoYKMxPoHhZy2LxvvVqBvSM1LemzBtqm6YFeylWKUE"
 #access_token <- 	"558596891-tDxN7T34cyVJJaBc4ExGTAq6wRfFBBlyHb2IzQvM"
@@ -28,9 +27,9 @@ library(dplyr)
 #OR https://raw.githubusercontent.com/RobertSellers/R/master/data/datascience.csv
 
 ########################### FOR SAMPLE DATABASE
-datascienceDF<-read.csv(file="https://raw.githubusercontent.com/RobertSellers/R/master/data/datascience.csv", header=TRUE, sep=",")
+datascienceDF<-read.csv(file="https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/datascience.csv", header=TRUE, sep=",")
 
-lutSkills<-read.csv(file= "https://raw.githubusercontent.com/RobertSellers/R/master/data/skills.csv", header=TRUE, sep=",") 
+lutSkills<-read.csv(file= "https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/skills.csv", header=TRUE, sep=",") 
 
 
 
