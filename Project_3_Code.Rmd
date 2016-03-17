@@ -1,0 +1,50 @@
+---
+title: "Project_3"
+author: "Robert Sellers"
+date: "March 15, 2016"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(twitteR)
+library(dplyr)
+
+########################### FOR SAMPLE DATABASE
+
+#consumer_key <- "DaAA9z8QvnxsdL0SpIr1oYwvP"
+#consumer_secret <- "bCfsuODQyoYKMxPoHhZy2LxvvVqBvSM1LemzBtqm6YFeylWKUE"
+#access_token <- 	"558596891-tDxN7T34cyVJJaBc4ExGTAq6wRfFBBlyHb2IzQvM"
+#access_secret <-"nHqi5sVT2XRoCoSu0dYQnboCg1h35w5hRvtg657t8ROX8"
+#setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+
+#datascience<-searchTwitter("#datascience", n=10000)
+
+#datascienceDF <- Map(as.data.frame, datascience )
+
+#datascienceDF  <- rbindlist( datascienceDF  )
+
+#write.csv(datascienceDF, file = "C:/Users/Robert/Desktop/CUNY/GitHub/R/data/datascience.csv")
+#OR https://raw.githubusercontent.com/RobertSellers/R/master/data/datascience.csv
+
+########################### FOR SAMPLE DATABASE
+datascienceDF<-read.csv(file="https://raw.githubusercontent.com/RobertSellers/R/master/data/datascience.csv", header=TRUE, sep=",")
+
+lutSkills<-read.csv(file= "https://raw.githubusercontent.com/RobertSellers/R/master/data/skills.csv", header=TRUE, sep=",") 
+
+
+
+lutSkills<-as.data.frame(lutSkills)
+
+lutSkills$Skill<-paste0("\\<",lutSkills$Skill,"\\>")
+
+lutSkills["counts"]<-NA
+
+lutSkills$Skill[7] <- "xxxxxxxxxx" #C++ not working as a keyword
+
+i<-1
+
+for(i in 1:nrow(lutSkills)) {
+    lutSkills$counts[i]<-length(grep(lutSkills$Skill[i], datascienceDF$text))
+    }
+```
