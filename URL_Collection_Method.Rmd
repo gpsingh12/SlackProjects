@@ -1,0 +1,31 @@
+---
+title: "Project_3_Data_Collection"
+author: "Kishore Prasad"
+date: "March 17, 2016"
+output: html_document
+---
+
+```{r}
+library(RCurl)
+library(stringr)
+# Read the data from github and skip the first 2 lines.  
+
+URL_list <- read.csv("https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/webpages_limited.csv", stringsAsFactors = FALSE)
+
+skill_list <- read.csv("https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/skills_limited.csv", stringsAsFactors = FALSE)
+
+d <- data.frame(URL="", Skill="", Count=0, stringsAsFactors = FALSE)
+
+for (eachURL in URL_list$WebpageURL){
+    URL_raw<- getURL(eachURL)
+    for (eachskill in skill_list$Skill) {
+        
+        d <- rbind(d, c(URL_list[URL_list$WebpageURL==eachURL,2], eachskill, str_count(URL_raw, eachskill)))        
+        
+    }
+}
+
+d
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
