@@ -1,0 +1,60 @@
+---
+title: "FinalProject"
+author: "Chirag Vithalani"
+date: "November 28, 2015"
+output: html_document
+---
+
+Required variables
+
+```{r echo=FALSE, message=FALSE}
+
+consumer_key <- "DaAA9z8QvnxsdL0SpIr1oYwvP"
+consumer_secret <- "bCfsuODQyoYKMxPoHhZy2LxvvVqBvSM1LemzBtqm6YFeylWKUE"
+access_token <- 	"558596891-tDxN7T34cyVJJaBc4ExGTAq6wRfFBBlyHb2IzQvM"
+access_secret <-"nHqi5sVT2XRoCoSu0dYQnboCg1h35w5hRvtg657t8ROX8"
+```
+
+
+```{r echo=FALSE, message=FALSE}
+suppressWarnings(require(twitteR))
+suppressWarnings(require(RCurl))
+suppressWarnings(require(wordcloud))
+suppressWarnings(require(tm)) #load text mining library
+suppressWarnings(setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret))
+us_tweets<-suppressWarnings(searchTwitter("datascience skill",n=400,lang="en"))
+#us_tweets
+us_text<- sapply(us_tweets,function(x) x$getText())
+
+
+us_corpus<- Corpus(VectorSource(us_text))
+lords <- tm_map(us_corpus, stripWhitespace)
+lords <- tm_map(lords, content_transformer(tolower))
+lords <- tm_map(lords, removeNumbers)
+
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+lords <- tm_map(lords, toSpace, "http\\S+\\s*")
+lords <- tm_map(lords, toSpace, "http\\S+\\s*")
+
+lords <- tm_map(lords, toSpace, "uselections")
+lords <- tm_map(lords, toSpace, "#")
+lords <- tm_map(lords, toSpace, "http\\w+")
+lords <- tm_map(lords, toSpace, "@\\w+")
+
+lords <- tm_map(lords, toSpace, "https\\w+")
+#for (i in 1:length(lords)){print(lords[[i]]$content)}
+lords <- tm_map(lords, toSpace, "uselect")
+#lords <- tm_map(lords, removeWords, stopwords("english"))
+lords <-tm_map(lords, removeWords, c(stopwords("english"),"#","uselect","uselection","obama","donaldtrump","trump","carson","donald","#uselect","uselections","elections","uselections  ","white","house"))
+
+
+
+
+#max.words is required to limit the number of words in the cloud
+wordcloud(lords,random.order=F,min.freq=1,max.words=400,colors=brewer.pal(8, "Dark2"))
+#wordcloud(lords,random.order=F,min.freq=1,max.words=200,col=rainbow(50))
+#wordcloud(lords.freq$Words, lords.freq$total)
+
+```
+
+
