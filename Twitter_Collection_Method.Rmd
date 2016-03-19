@@ -113,8 +113,8 @@ lookupFrequencies <-function(twitterData,lookupTable) {
   colfunc<-colorRampPalette(c("red","yellow","springgreen","royalblue"))
   colnamesbarplot <- as.character(lookupTable$Skill)
   barplot(lookupTable$counts,main="Word Counts",horiz=TRUE,col=(colfunc(50)),axes=TRUE, names.arg=colnamesbarplot, cex.names=0.5, las=1, xlim=c(0,30))
-grid(nx=NULL, ny=NA,col="black")
-box()
+  grid(nx=NULL, ny=NA,col="black")
+  box()
 }
 ```
 
