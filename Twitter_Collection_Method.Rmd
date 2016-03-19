@@ -2,7 +2,7 @@
 title: "Project_3"
 author: "Robert Sellers"
 date: "March 15, 2016"
-output: html_document
+output: pdf_document
 ---
 
 **Libraries used.** 
@@ -98,7 +98,6 @@ dataScienceWordCloud(twitter_results_march_16)
 
 
 ```{r}
-head(lutSkills)#skills table preview
 
 lutSkills<-read.csv(file= "https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/skills.csv", header=TRUE, sep=",") 
 
@@ -122,6 +121,8 @@ box()
 **Running the function on March 16th**
 
 **To Do - Fix plot & refine the function. Sort the data and continue to update the skills lookup table to get better data.**
+
+**To Do - We ultimately want to run this on each date to ensure that we have consistency between dates and then ultimately to combine all of the data.**
 
 ```{r}
 lookupFrequencies(twitter_results_march_16,lutSkills)
