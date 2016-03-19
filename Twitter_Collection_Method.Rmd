@@ -5,45 +5,124 @@ date: "March 15, 2016"
 output: html_document
 ---
 
+**Libraries used.** 
+
 ```{r}
 library(data.table)
 library(dplyr)
+library(RCurl)
+library(stringr)
+library(twitteR)
+require(wordcloud)
+require(tm)
+```
 
-########################### FOR SAMPLE DATABASE
-#library(twitteR)
+**Twitter OAuth. Will not be evaluated. This is only required when generating new datasets. Both included, only one needed.** 
+
+```{r eval=FALSE}
+#Robert's Credentials
 #consumer_key <- "DaAA9z8QvnxsdL0SpIr1oYwvP"
 #consumer_secret <- "bCfsuODQyoYKMxPoHhZy2LxvvVqBvSM1LemzBtqm6YFeylWKUE"
 #access_token <- 	"558596891-tDxN7T34cyVJJaBc4ExGTAq6wRfFBBlyHb2IzQvM"
 #access_secret <-"nHqi5sVT2XRoCoSu0dYQnboCg1h35w5hRvtg657t8ROX8"
 #setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
 
-#datascience<-searchTwitter("#datascience", n=10000)
+#Chirag's credentials
+#consumer_key <- "DaAA9z8QvnxsdL0SpIr1oYwvP"
+#consumer_secret <- "bCfsuODQyoYKMxPoHhZy2LxvvVqBvSM1LemzBtqm6YFeylWKUE"
+#access_token <-     "558596891-tDxN7T34cyVJJaBc4ExGTAq6wRfFBBlyHb2IzQvM"
+#access_secret <-"nHqi5sVT2XRoCoSu0dYQnboCg1h35w5hRvtg657t8ROX8"
+```
 
-#datascienceDF <- Map(as.data.frame, datascience )
+**Sample data mining code. The following code was used to generate the .csv files that you will find inside: https://github.com/RobertSellers/SlackProjects/tree/master/data**
 
-#datascienceDF  <- rbindlist( datascienceDF  )
+```{r eval=FALSE}
+twitter_results_Feb_March_19<-searchTwitter("#datascience", n=10000)
+twitter_results_Feb_March_19 <- Map(as.data.frame, twitter_results_Feb_March_19 )
+twitter_results_Feb_March_19  <- rbindlist(twitter_results_Feb_March_19  )
+write.csv(twitter_results_Feb_March_19 , file = "C:/Users/Robert/Desktop/CUNY/GitHub/R/data/twitter_results_Feb_March_19.csv")
+```
 
-#write.csv(datascienceDF, file = "C:/Users/Robert/Desktop/CUNY/GitHub/R/data/datascience.csv")
-#OR https://raw.githubusercontent.com/RobertSellers/R/master/data/datascience.csv
+**Loading the data sources.  Currently dating from 3/16, 3/18, 3/19.  Will run only 3/16 for this.**
 
-########################### FOR SAMPLE DATABASE
-datascienceDF<-read.csv(file="https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/datascience.csv", header=TRUE, sep=",")
+```{r}
+twitter_results_march_16<-read.csv(file="https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/twitter_results_March_16.csv", header=TRUE, sep=",")
+```
+```{r eval=FALSE}
+twitter_results_march_18<-read.csv(file="https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/twitter_results_March_18.csv", header=TRUE, sep=",")
+twitter_results_march_19<-read.csv(file="https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/twitter_results_March_19.csv", header=TRUE, sep=",")
+```
+
+
+**Word Cloud function.**
+
+**To Do: We may want a second "stopWords" variable input.** 
+
+**To Do: The results from this word cloud (that are relevant) should be added to the skills.csv.**  
+
+**To Do: Find a way to export a frequency table from this data?** 
+
+```{r}
+dataScienceWordCloud<-function(twitterData){
+  text<-twitterData$text
+  corpus<- Corpus(VectorSource(text))
+  corpus <- tm_map(corpus, stripWhitespace)
+  corpus <- tm_map(corpus, content_transformer(tolower))
+  corpus <- tm_map(corpus, removeNumbers)
+  
+  toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+  corpus <- tm_map(corpus, toSpace, "http\\S+\\s*")
+  corpus <- tm_map(corpus, toSpace, "http\\S+\\s*") #twice????
+  corpus <- tm_map(corpus, toSpace, "#")
+  corpus <- tm_map(corpus, toSpace, "http\\w+")
+  corpus <- tm_map(corpus, toSpace, "@\\w+")
+  
+  corpus <- tm_map(corpus, toSpace, "https\\w+")
+  corpus <- tm_map(corpus, toSpace, "uselect")
+  corpus <-tm_map(corpus, removeWords, c(stopwords("english"),"#"))
+  
+  wordcloud(corpus,random.order=F,min.freq=1,max.words=400,colors=brewer.pal(8, "Dark2"))
+}
+```
+
+**Running the word cloud on March 16**
+
+```{r}
+dataScienceWordCloud(twitter_results_march_16)
+```
+
+
+###Lookup table function.  
+
+**ToDo: This uses the "skill.csv" as a look up table that is also applied to the other team's URL method. We ought to add new values to that csv based on what we find in the twitter dataset.**
+
+
+```{r}
+head(lutSkills)#skills table preview
 
 lutSkills<-read.csv(file= "https://raw.githubusercontent.com/RobertSellers/SlackProjects/master/data/skills.csv", header=TRUE, sep=",") 
 
+lookupFrequencies <-function(twitterData,lookupTable) {
+  lookupTable<-as.data.frame(lookupTable)
+  lookupTable$Skill<-paste0("\\<",lookupTable$Skill,"\\>")
+  lookupTable["counts"]<-NA
+  lookupTable$Skill[7] <- "xxxxxxxxxx" #C++ not working as a keyword
+  i<-1
+  for(i in 1:nrow(lookupTable)) {
+      lookupTable$counts[i]<-length(grep(lookupTable$Skill[i], twitterData$text))
+  }
+  colfunc<-colorRampPalette(c("red","yellow","springgreen","royalblue"))
+  colnamesbarplot <- as.character(lookupTable$Skill)
+  barplot(lookupTable$counts,main="Word Counts",horiz=TRUE,col=(colfunc(50)),axes=TRUE, names.arg=colnamesbarplot, cex.names=0.5, las=1, xlim=c(0,30))
+grid(nx=NULL, ny=NA,col="black")
+box()
+}
+```
 
+**Running the function on March 16th**
 
-lutSkills<-as.data.frame(lutSkills)
+**To Do - Fix plot & refine the function. Sort the data and continue to update the skills lookup table to get better data.**
 
-lutSkills$Skill<-paste0("\\<",lutSkills$Skill,"\\>")
-
-lutSkills["counts"]<-NA
-
-lutSkills$Skill[7] <- "xxxxxxxxxx" #C++ not working as a keyword
-
-i<-1
-
-for(i in 1:nrow(lutSkills)) {
-    lutSkills$counts[i]<-length(grep(lutSkills$Skill[i], datascienceDF$text))
-    }
+```{r}
+lookupFrequencies(twitter_results_march_16,lutSkills)
 ```
