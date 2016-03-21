@@ -1,0 +1,147 @@
+---
+title: "test2"
+author: "GP SINGH"
+date: "March 20, 2016"
+output: html_document
+---
+
+```{r}
+
+
+library("rvest")
+library(XML)
+library(RCurl)
+library(tidyr)
+library(tm)
+
+```
+
+
+```{r}
+session <- html_session("http://www.indeed.com/jobs?q=%22data+scientist%22&l=New+York%2C+NY'")
+form <- html_form(session)[[1]]
+form <- set_values(form)
+form
+
+
+# Version 1 of our submit_form function
+
+submit_form2 <- function(session, form){
+  library(XML)
+  url <- XML::getRelativeURL(form$url, session$url)
+  url <- paste(url,'?',sep='')
+  values <- as.vector(rvest:::submit_request(form)$values)
+  att <- names(values)
+  if (tail(att, n=1) == "NULL"){
+    values <- values[1:length(values)-1]
+    att <- att[1:length(att)-1]
+  }
+  q <- paste(att,values,sep='=')
+  q <- paste(q, collapse = '&')
+  q <- gsub(" ", "+", q)
+  url <- paste(url, q, sep = '')
+  html_session(url)
+}
+
+# Version 2 of our submit_form function
+library(httr)
+# Appends element of a list to another without changing variable type of x
+# build_url function uses the httr package and requires a variable of the url class
+appendList <- function (x, val)
+{
+  stopifnot(is.list(x), is.list(val))
+  xnames <- names(x)
+  for (v in names(val)) {
+    x[[v]] <- if (v %in% xnames && is.list(x[[v]]) && is.list(val[[v]]))
+      appendList(x[[v]], val[[v]])
+    else c(x[[v]], val[[v]])
+  }
+  x
+}
+ 
+# Simulating submit_form for GET requests
+submit_geturl <- function (session, form)
+{
+  query <- rvest:::submit_request(form)
+  
+  relativeurl <- XML::getRelativeURL(form$url, session$url)
+  basepath <- parse_url(relativeurl)
+ 
+  fullpath <- appendList(basepath)
+  
+  fullpath
+}
+```
+
+
+
+
+
+```{r}
+
+# Submit form and get new url
+session1 <- submit_form2(session, form)
+
+
+
+# Store web url
+data_sci_indeed <- session1
+
+# Get job titles
+job_title <- data_sci_indeed %>% 
+  html_nodes("[itemprop=title]") %>%
+  html_text()
+
+
+
+# Get descriptions
+description <- data_sci_indeed %>%
+  html_nodes("[itemprop=description]") %>%
+  html_text()
+
+# Get the links
+link <- data_sci_indeed %>%
+  html_nodes("[itemprop=title]") %>%
+  html_attr("href")
+link <- paste('[Link](http://www.indeed.com', link, sep='')
+link <- paste(link, ')', sep='')
+
+indeed_jobs <- data.frame(job_title,description, link)
+
+library(knitr)
+kable(indeed_jobs, format = "html")
+```
+
+
+
+
+
+```{r}
+review_text <- paste(indeed_jobs$description, collapse=" ")
+review_text
+
+review_source <- VectorSource(review_text)
+
+corpus <- Corpus(review_source)
+
+corpus <- tm_map(corpus, content_transformer(tolower))
+
+
+corpus <- tm_map(corpus, removePunctuation)
+
+corpus <- tm_map(corpus, stripWhitespace)
+
+
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+dtm <- DocumentTermMatrix(corpus)
+
+dtm2 <- as.matrix(dtm)
+
+frequency <- colSums(dtm2)
+
+frequency <- sort(frequency, decreasing=TRUE)
+
+frequency
+```
+
